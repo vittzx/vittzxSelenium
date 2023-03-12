@@ -1,0 +1,27 @@
+ATTENTION: - The code was wrote in "pt-Br" language!
+           - The code was teste in nike websote language portuguese
+           - The quotations mar
+
+
+# Search a item and a color wanted
+#
+
+from selenium.webdriver.common.keys import Keys
+from selenium import webdriver
+import time
+
+path = "D:\chromedriver.exe"
+driver = webdriver.Chrome(path)
+driver.get("https://www.nike.com.br/")
+driver.maximize_window()
+pesquisa = driver.find_element_by_name('search')
+
+item_desejado :str = input("Qual item deseja ser pesquisado no site da nike? ")
+time.sleep(2)
+pesquisa.send_keys(item_desejado)
+pesquisa.send_keys(Keys.RETURN)
+time.sleep(5)
+cor_desejada: str = input("Digite a cor desejada: ").title()
+pegar_cor = driver.find_element_by_css_selector(f"[aria-label={cor_desejada}]")
+pegar_cor.click()
+
