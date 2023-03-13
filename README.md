@@ -1,2 +1,2 @@
 # vittzxSelenium
-Seleniums code python
+Automotation code in python
