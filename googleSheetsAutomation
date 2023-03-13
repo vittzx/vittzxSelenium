@@ -1,0 +1,72 @@
+# Import modules
+import gspread
+import pandas as pd
+cred_file = 'vivid-router-344004-c35014048aef.json'
+gc = gspread.service_account(cred_file)
+
+# Estabilish the connection
+
+database = gc.open("database") #open(x) to open an file and x is the name of the file
+wks = database.worksheet("Página1") # encontra o id da folha(sheet) JA EXISTENTE e atua em cima dela.
+
+# List all the works sheets
+
+list_wks = database.worksheets() # Show all the sheets, output: [<Worksheet 'Página1' id:0>, <Worksheet 'Página2' id:356275999>]
+
+# database.add_worksheet("new_wks","100","20" );  Add a new work sheet(name, rows,columns)
+
+
+# Show the url of the document
+
+
+url = database.url
+
+#print(url)-> https://docs.google.com/spreadsheets/d/1GdzlLqktRQIwIKKm3DdE7EoutxHyZ0vYsITYXZK5YXs
+
+
+# Acess all the records
+
+records = wks.get_all_records()
+data = pd.DataFrame(records) # -> print all objects in the document 
+# print(data) -> print a format table of the object in the document
+
+
+# Search position 
+#------------------------------------
+# wks = database.worksheet("Página1")
+# ----------------------------------- 
+name = "John"
+cell = wks.find(name) # output: <Cell R14C1 'John'>
+key_row = cell.row
+key_col = cell.col
+# print(f"The {name} is in the row: {key_row} and the column: {key_col}") ----> The John is in the row: 14 and the column: 1
+
+
+# Obtaining the value  
+
+find = wks.cell(14,1).value # -> cell(row,column)
+# print(find) -----> John
+
+
+# print(wks.col_values(2)) ------> print all objects in the second column 
+# print(len(wks.col_values(2))) --------> print the lenght of all the objects 
+
+
+
+
+# Update a new cell from the database
+
+new_name = "uielintom"
+new_age = "30"
+wks.update_cell(32,1,new_name)    # update_cell(n,y,i) ------>  n = row, y = column , i = item  
+wks.update_cell(32,2,new_age)
+
+
+# Add itemns in determined range in a cell
+
+cell_list = wks.range("A33:A36")
+names = ['Josue','Jiulberto','jiulinao','jeferson']
+for i, v in enumerate(names):
+    cell_list[i].value = v
+
+wks.update_cells(cell_list)
