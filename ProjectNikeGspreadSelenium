@@ -1,0 +1,431 @@
+# All imports | Todos os imports
+from tkinter import *
+from tkinter import messagebox
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium import webdriver
+import gspread
+# import pandas as pd
+import time
+
+#------------------------------------------------------------------------------------------------------------------------------------------
+# Function of the window | Funcao para a janela
+
+def quit():
+    global item
+    item = e_1.get().title()
+    janela.destroy()
+
+
+#------------------------------------------------------------------------------------------------------------------------------------------
+# Rules of the program | Regras do programa
+janela = Tk()
+messagebox.showwarning(title="Regra ", 
+                           message='Para o funcionamento do programa, insira primeiramente um produto e NÃO um tipo, cor ou tamanho antes ou depois.\n\n'
+                           "Caso queira colocar uma especificacao NÃO coloque cor, segue exemplo:\n\n"
+                           "- Tenis infantil 38\n"
+                           "- Camisa feminina\n" 
+                           "- Calca gg\n\n"
+                           "Caso não siga a ordem a cima, o programa não responderá corretamente.")
+janela.destroy()
+
+#------------------------------------------------------------------------------------------------------------------------------------------
+# Open the window to received a item wanted
+# Abre a janela para receber o item desejado
+
+try:
+    janela = Tk()
+    janela.title("Item desejado")
+    janela.geometry("400x100")
+    janela.config(
+        bg="#edfaf9"
+    )
+    label = Label(
+        janela,
+        background="#edfaf9",
+        text="Digite o Item desejado:",
+        font=("Courier New",10),
+        anchor=W,
+
+    ).pack(side=TOP)
+
+    e_1 = Entry(
+        janela,
+        font=("Courier New",15)
+    )
+    e_1.pack(side=LEFT)
+
+    b_1 = Button(
+        janela,
+        text="Enviar",
+        command=quit,
+    )
+    b_1.pack(side=LEFT)
+
+    # fecha automaticamente em 15 seundos
+    # janela.after(15000,lambda:janela.destroy())
+
+    janela.mainloop()
+except Exception:
+    messagebox.showwarning(title="Erro :( ", message='Oops! Você colocou uma opcao não válida, tente outra' )
+
+
+#------------------------------------------------------------------------------------------------------------------------------------------
+# Start The Automotation | Comeca a Automação
+
+
+path = "D:\chromedriver.exe"                     # ---> Path to localize the chromedrive | Caminho para localizar o chromedriver   
+driver = webdriver.Chrome(path)
+driver.get("https://www.nike.com.br/")           # ---> Open the nike's site | Abre o site da nike 
+driver.maximize_window()
+pesquisa = driver.find_element(By.NAME, 'search') # Acess the search bar | Abre a barra de pesquisa
+#------------------------------------------------------------------------------------------------------------------------------------------
+# Received the item and search it | Recebe o item e pesquisa-o
+#
+# (TEST)item_desejado :str = input("Qual item deseja ser pesquisado no site da nike? ") (TEST)
+prod = item 
+try:
+    time.sleep(2)
+    pesquisa.send_keys(item)
+    pesquisa.send_keys(Keys.RETURN)
+    time.sleep(5)
+except NameError:
+    messagebox.showwarning(title="Erro :( ", message='Oops! Você colocou uma opcao não válida, tente outra' )
+#------------------------------------------------------------------------------------------------------------------------------------------
+# Take all colors  | Pega todas as cores disponiveis no site
+
+item = ''
+try:
+    wait = WebDriverWait(driver, 20)
+    elements = wait.until(EC.presence_of_all_elements_located(
+        (By.XPATH, '//*[@id="__next"]/div[2]/div[2]/div/div/div[3]/div[2]/div[1]/div/div/div[1]/div[2]/div/ul/li'))) 
+
+    # Loop through each element and select its child p element
+    global cores
+    cores: list  = [] 
+    for element in elements:
+        p = element.find_element(By.XPATH, './/p')
+        cores.append(p.text)
+
+except Exception:
+    print("Timed out waiting for search results to load")
+
+#------------------------------------------------------------------------------------------------------------------------------------------
+# Open the window to take the color wanted | Abre a janela para receber a cor desejada
+cores_formatadas: str = ", ".join(cores) 
+
+janela = Tk()
+messagebox.showwarning(title="Regra ", 
+                           message="ATENÇÃO: É NECESSÁRIO A ESCOLHA DE UMA DAS CORES DA LISTA PARA CONTINUAR.\n\n"
+                           "SOMENTE AS CORES ABAIXO ESTÃO DISPONÍVIES.")
+janela.destroy()
+
+
+while not item in cores:
+    janela = Tk()
+
+    janela.title("Cor Desjada:")
+    janela.geometry("900x200")
+    janela.config(bg="#edfaf9")
+
+
+    label = Label(
+        janela,
+        background="#edfaf9",
+        text="Digite uma cor desejada. \n"
+        f" Somente essas cores estão disponiveis:",
+        font=("Courier New",10),
+        anchor=W,
+    ).pack(side=TOP)
+    label_colors = Label(
+        janela,
+        background="#edfaf9",
+        text= f"{cores_formatadas} \n",
+        font=("Courier New",10,'bold'),
+        anchor=N
+    )
+    label_colors.pack()
+
+    e_1 = Entry(
+        janela,
+        font=("Courier New",30)
+    )
+    e_1.pack(side=LEFT)
+
+    b_1 = Button(
+        janela,
+        text="Enviar",
+        command=quit,
+        height= 2, width=10
+    )
+    b_1.pack(side=LEFT)
+
+    janela.mainloop()
+
+
+# Close automatically in 15 seconds |Fecha automaticamente em 15 segundos
+#janela.after(15000,lambda:janela.destroy()) 
+
+# (TEST)cor_desejada: str = input("Digite a cor desejada: ").title()(TEST)
+
+#------------------------------------------------------------------------------------------------------------------------------------------
+# Received the collor that the user wants | Recebe a cor que o usuário 
+pegar_cor = driver.find_element(By.CSS_SELECTOR, f"[aria-label={item.title()}]")
+pegar_cor.click()
+
+time.sleep(5)
+
+#------------------------------------------------------------------------------------------------------------------------------------------
+# If the user search a shoes (Tênis), to format for the same style for the Nike's website| Se o usuário procurar Tenis, é necessário formatar no estilo do website da Nike  
+x = prod.split()
+if x[0][0:2].title() == "Te":
+    prod = prod.replace(prod[0:2],'Tê')
+time.sleep(3)
+#------------------------------------------------------------------------------------------------------------------------------------------
+# Add all results those itens searched of the Nike's site  | Adiciona todos os produtos resultados da pesquisa do site da Nike  
+tudo: list = []
+for i in range(0,500):
+    try:
+        produto = driver.find_elements(By.TAG_NAME,'p')[i]
+        tudo.append(produto.text)
+    except IndexError:
+        continue
+    except Exception:
+        continue
+
+
+
+time.sleep(10)
+
+
+
+#------------------------------------------------------------------------------------------------------------------------------------------
+
+del tudo [-7::] # Remove specifications of the Nike's site  | Remove sas espeficificações do site da Nike 
+del tudo [0:1]  # Remove the color of the list | Remove a cor da lista 
+
+itens_c_desconto: list = []
+
+itens_s_desconto: list = []
+
+itens_site: list = ['005',
+              'AIR', 'Agasalho', 'Air', "ACG"
+              'Biquini',"Blazer",'Blusão', 'Bola', 'Bolsa', 'Boné', 
+              'Calça', 'Camisa', 'Camiseta', 'Caneleira', 'Chapéu', 'Chinelo', 'Chuteira','Colete', 
+              'Dunk', 
+              'Fleece',
+              'Jacket', 'Jaqueta', 'Jordan', 
+              "ISPA",
+              'KYRIE',"KD15", "Kwondo1",
+              'Legging', 'Luva','Lunar', 'LDWaffle', 
+              'Macacão','Maiô','Meia', 'Meião',"Men's",'Mochila',
+                'Nike',"NIKE",
+                'Plus', 'Pochete', 
+                'Sacola', 'Sandália','Saia', 'Shorts', 'Sapatilha','Sunga',
+                'Regata',"RIGHT", 
+                'Top', 'Touca', 'Tênis', 
+                'Vestido','Viseira', 
+                "Women's", "WOMEN'S",
+                'Zion']
+
+time.sleep(5)
+#------------------------------------------------------------------------------------------------------------------------------------------
+# Selection itens with discount and itens without discount |Separação de itens com desconto e itens sem desconto                                                                  
+try:
+    for i in range(len(tudo)):
+        z: list = tudo[i+5].split()
+        y: list  = tudo[i+3].split()
+        x: list = tudo[i].split()
+        if tudo[i] in cores:
+            continue
+        elif y[0] in itens_site and x[0] in itens_site:
+            itens_s_desconto.append(tudo[i])        # Product | Produto
+            itens_s_desconto.append(tudo[i+1])      # Type    | Tipo       
+            itens_s_desconto.append(tudo[i+2])      # Price   | Preço
+        elif z[0] in itens_site and x[0] in itens_site:
+            itens_c_desconto.append(tudo[i])
+            itens_c_desconto.append(tudo[i+1])
+            itens_c_desconto.append(tudo[i+2])
+           # itens_c_desconto.append(tudo[i+3])
+            itens_c_desconto.append(tudo[i+4])
+
+except IndexError:
+    pass
+except Exception:
+   pass
+
+
+produtos: list = ["Produtos com desconto",]
+preco: list = ["Preço atual",]
+# preco_antigo: list = ["Preço_antigo"]
+# try:
+#     for i in range(len(preco),2):
+#         preco.remove(preco[i])
+#         preco_antigo.append(i)
+# except Exception:
+#    pass
+   
+desconto:list = ["Desconto"]
+tipo: list = ["Tipo",]
+
+produtos_s:list =["Produtos"]
+preco_s: list =["Preço"] 
+tipo_s: list =["Tipo"]
+
+for i in range(len(itens_c_desconto)):
+  try:
+    x = itens_c_desconto[i].split()
+    if itens_c_desconto[i][0:2] == "R$":
+      preco.append(itens_c_desconto[i])                             
+    elif x[0] in itens_site:
+      produtos.append(itens_c_desconto[i])
+    elif itens_c_desconto[i][1] == "%" or itens_c_desconto[i][2] == "%":
+      desconto.append(itens_c_desconto[i])
+    else:  
+      tipo.append(itens_c_desconto[i])
+  except Exception:
+    pass
+  
+
+for i in range(len(itens_s_desconto)):
+  try:
+    x = itens_s_desconto[i].split()
+    if itens_s_desconto[i][0:2] == "R$":
+      preco_s.append(itens_s_desconto[i])                             
+    elif x[0] in itens_site:
+      produtos_s.append(itens_s_desconto[i])
+    else:
+      tipo_s.append(itens_s_desconto[i])
+  except Exception:
+    pass
+  
+
+
+time.sleep(5)
+#------------------------------------------------------------------------------------------------------------------------------------------
+# Name of your shell in spradsheet | Nome da sua página/folha na planilha
+janela = Tk()
+messagebox.showwarning(title="Regra ", 
+                           message="ATENÇÃO. PARA CONTINUAR, PRECISA DAR NOME À SUA PLANILHA\n"
+                            "Para que escreva corretamente, siga a fortamação abaixo:\n\n"
+                            "- Planilha_itens\n- Minha_planilha\n- pesquisa1")
+janela.destroy()
+
+item = ''
+
+janela = Tk()
+
+janela.title("Cor Desjada:")
+janela.geometry("900x200")
+janela.config(bg="#edfaf9")
+
+
+label = Label(
+    janela,
+    background="#edfaf9",
+    text="Digite um nome para a sua planilha. \n",
+    font=("Courier New",10),
+    anchor=W,).pack(side=TOP)
+
+
+
+e_1 = Entry(
+        janela,
+        font=("Courier New",30)
+)
+e_1.pack(side=LEFT)
+
+b_1 = Button(
+    janela,
+    text="Enviar",
+    command=quit,
+    height= 2, width=10
+    )
+b_1.pack(side=LEFT)
+janela.mainloop()
+
+#---------------------------------------------------------------------------------------------------------------------------------------------
+# Add all the informations of the search in spreadsheet's shell | Adiciona todas as informações da pesquisa na sua página/folha na planilha
+
+
+time.sleep(5)
+try:
+    cred_file = 'vivid-router-344004-c35014048aef.json'
+    gc = gspread.service_account(cred_file)
+
+    database = gc.open("itens_nike")                #open(x) to open an file and x is the name of the file
+    database.add_worksheet(item,"300","20" )
+    wks = database.worksheet(item)                  # encontra o id da folha(sheet) JA EXISTENTE e atua em cima dela.
+
+
+    cell_list_products = wks.range(f"A1:A{str(len(produtos))}")
+    cell_list_tipos = wks.range(f"D1:D{str(len(tipo))}")
+    cell_list_desconto = wks.range(f"G1:G{str(len(desconto))}")
+    cell_list_preco = wks.range(f"F1:F{str(len(preco))}")
+    # cell_list_preco_antigo = wks.range(f"H1:H({str(len(preco_antigo))})")
+
+
+    cell_list_products_s = wks.range(f"K1:K{str(len(produtos_s))}")
+    cell_list_tipos_s = wks.range(f"M1:M{str(len(tipo_s))}")
+    cell_list_preco_s = wks.range(f"O1:O{str(len(preco_s))}")
+
+
+except gspread.exceptions.APIError:
+    janela = Tk()
+    messagebox.showwarning(title="Erro :(", 
+                           message="O nome inserido para a criação da sua folha na planilha ja existe.\n\n"
+                           "Por favor tente outro.")
+    janela.destroy()
+except Exception:
+   pass
+
+
+for i, v in enumerate(produtos):
+    cell_list_products[i].value = v
+
+for i, v in enumerate(tipo):
+     cell_list_tipos[i].value = v
+
+for i, v in enumerate(preco):
+    cell_list_preco[i].value = v
+
+for i, v in enumerate(desconto):
+    cell_list_desconto[i].value = v
+
+# for i, v in enumerate(preco_antigo):
+#     cell_list_preco_antigo[i].value = v
+
+#----------------------------------------------------------------------------------------------------------------------------------
+
+for i, v in enumerate(produtos_s):
+    cell_list_products_s[i].value = v
+
+for i, v in enumerate(tipo_s):
+     cell_list_tipos_s[i].value = v
+
+for i, v in enumerate(preco_s):
+    cell_list_preco_s[i].value = v
+
+
+
+
+
+wks.update_cells(cell_list_products)
+wks.update_cells(cell_list_tipos)
+wks.update_cells(cell_list_preco)
+wks.update_cells(cell_list_desconto)
+# wks.update_cells(cell_list_preco_antigo)
+
+wks.update_cells(cell_list_products_s)
+wks.update_cells(cell_list_tipos_s)
+wks.update_cells(cell_list_preco_s)
+
+
+caminho_plainilha = database.url
+# driver.get({caminho:= database.url})
+
+
+
